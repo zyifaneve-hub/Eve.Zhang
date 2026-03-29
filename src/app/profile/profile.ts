@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink],
   template: `
     <div class="px-6 max-w-7xl mx-auto pt-8">
       <section class="mb-16">
@@ -35,7 +37,7 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
       </section>
 
       <section class="mb-12">
-        <a href="#" class="group relative block w-full overflow-hidden rounded-2xl bg-surface-container-low border border-on-surface/5 p-8 transition-all hover:bg-surface-container-high">
+        <a routerLink="/crate" class="group relative block w-full overflow-hidden rounded-2xl bg-surface-container-low border border-on-surface/5 p-8 transition-all hover:bg-surface-container-high">
           <div class="flex items-center justify-between relative z-10">
             <div class="flex items-center gap-6">
               <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
