@@ -53,7 +53,8 @@ import { RouterLink } from '@angular/router';
               <div class="flex justify-between items-center pt-4">
                 <span class="font-headline font-extrabold text-lg md:text-xl">¥{{item.price}}</span>
                 <button (click)="toggleLike($event, item)" 
-                        class="material-symbols-outlined transition-colors"
+                        class="material-symbols-outlined transition-all duration-300 hover:scale-110 active:scale-95"
+                        [class.animate-heart-pop]="item.liked"
                         [class.text-primary]="item.liked"
                         [class.text-on-surface]="!item.liked"
                         [class.opacity-30]="!item.liked"

@@ -20,8 +20,8 @@ import { RouterLink } from '@angular/router';
       <div class="flex flex-col">
         @for (item of items; track item.id) {
           <a [routerLink]="['/product', item.id]" class="group relative flex gap-4 p-4 hover:bg-white/5 transition-all duration-300 border-b border-white/5 cursor-pointer">
-            <div class="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg shadow-lg" [class.opacity-60]="item.status === 'wait'">
-              <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover" [class.grayscale]="item.status === 'wait'" referrerpolicy="no-referrer" />
+            <div class="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg shadow-lg">
+              <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
               <div class="absolute top-1 left-1">
                 @if (item.status === 'available') {
                   <span class="bg-primary-container text-on-primary-container px-1.5 py-0.5 text-[8px] font-bold rounded-sm uppercase">现货</span>

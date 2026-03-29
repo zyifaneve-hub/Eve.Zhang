@@ -99,7 +99,8 @@ interface Product {
                   <div class="flex justify-between items-center pt-2">
                     <span class="font-headline font-extrabold text-base">¥{{item.price}}</span>
                     <button (click)="toggleLike($event, item)" 
-                            class="material-symbols-outlined transition-colors"
+                            class="material-symbols-outlined transition-all duration-300 hover:scale-110 active:scale-95"
+                            [class.animate-heart-pop]="item.liked"
                             [class.text-primary]="item.liked"
                             [class.text-on-surface]="!item.liked"
                             [class.opacity-30]="!item.liked"
