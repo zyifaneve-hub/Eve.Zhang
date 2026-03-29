@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { RecordService } from '../services/record.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -40,10 +41,10 @@ import { RouterLink } from '@angular/router';
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
-        @for (item of items; track item.id) {
+        @for (item of items(); track item.id) {
           <a [routerLink]="['/product', item.id]" class="group flex flex-col cursor-pointer">
             <div class="relative aspect-square overflow-hidden bg-surface-container-low mb-6 rounded-none">
-              <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
+              <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
               <div class="absolute top-4 right-4 bg-primary text-on-primary text-[10px] px-2 py-1 font-bold tracking-widest">[{{item.format}}]</div>
               <div class="absolute bottom-4 left-4 bg-surface/80 backdrop-blur-md px-2 py-1 text-[10px] text-primary border border-primary/20">{{item.condition}}</div>
             </div>
@@ -70,17 +71,30 @@ import { RouterLink } from '@angular/router';
     </section>
   `
 })
-export class HomeComponent {
-  items = [
-    { id: '1', title: 'Amnesiac', artist: 'Radiohead', price: '1,280', format: '黑胶', condition: 'NM (近乎新品)', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTeQ6EDgEO-UvcnLlabt440OhXt-JmMaRBnhCo9dBvhnyFXXarSKt2Pn4LmrfemuRfjjRjl09erREg36YcEjkD0yXMaSbgqvpOjqckeoWqK2d3yzJM7n6e3Cqchaxbw0AZJfs9m2ZUbtdAfPEL7C86Ok7kTMc4EmblF9fDtRWO2SQi8_6VJsxQ9rdhNTrLWUlMuSI4YPr1mUZjsMPF-TtcdkuTIWdfgFnVNHVhX6WlJ44bwlzEMsfVCJjqlPpBTXFN26SdV5JmEe3i', liked: false },
-    { id: '2', title: 'Unknown Pleasures', artist: 'Joy Division', price: '450', format: '磁带', condition: 'VG+ (极好)', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAWTFppcWEiW8QzsWF1ya0gdu-7i-uON-MZ6RdJBSluzfXvfqxRxJl25uw-GVcMP4qrTKdRlIstxEDuLLz5DLfxdksMc4uSYnc-k6YRnOgNoNwtOmETeMO7mUmNy0ZMUpzJMDUMwAcO4WGd5rr2Ga-o0D6vdX5QYUDsdcBqE1_AzD8i3N9Ome4E9pltkGzrymiAGF3hfJoYY9LGLDGIUgZ26_l8TA8XCdN67RHPoU0wGwWsf4DKca6Qc9TqgbGM98SCZ919f9Ic2Sx5', liked: false },
-    { id: '3', title: 'The Wall', artist: 'Pink Floyd', price: '180', format: 'CD', condition: 'M (全新)', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBVlPnZW90i9sqd6y-J-W6IZFjRd9RY3SOl7jysCyHL3ZyiXIlYwht7012lAkD4F8V72AwPbmUO9gn9_MQl91a26mhEysAbOsDHIZqHnxFAEfTJ38mlCLaeVOc4-U7EUQB5Ngzz6CrVz0K0Ew2SUf-3WrNIpXQR0dmeWTRg9cnOwJwpRSbg2CQvlXo0v6Qj5GlIiB-T30j3LRteQZEhpOGzB18EGvcDiTAJhLc5kZNZT9jfkoOUZF-zHbCIxDjRyo1pYOSKSTuskH0g', liked: false },
-    { id: '4', title: 'Kind of Blue', artist: 'Miles Davis', price: '2,400', format: '黑胶', condition: 'NM (近乎新品)', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2duI1hU6GRkF9afI15orOuJs0lBfn4aoZRpnnkkV07Di0AR8GJal9SVkF6PeB4TaShpmcKGd0ZaqnmzLG704ZZZRbtY3s65LBU0Vzz-H7bPZG-F3t_Jl6lv1lVvgmd055nK4LuR-SRTYHp3kLQZdFSxEjnx-NBjXX0nVC7kh38is2upTd02f4p61piUhsDcwaavqhi_ZIMYNtaaic6ZEqO8yurgrExxqC3VpWEZHRTv2yNMCdhHHRj1UrBPtqKsw8x1NT1s0d4VTG', liked: false },
-  ];
+export class HomeComponent implements OnInit {
+  private recordService = inject(RecordService);
+  items = signal<any[]>([]);
+
+  ngOnInit() {
+    this.recordService.getRecords().subscribe({
+      next: (data) => {
+        this.items.set(data.map(item => ({
+          ...item,
+          condition: `${item.media_grade} / ${item.sleeve_grade}`,
+          image: item.image_url
+        })));
+      },
+      error: (err) => {
+        console.error('Failed to load records:', err);
+      }
+    });
+  }
 
   toggleLike(event: Event, item: any) {
     event.preventDefault();
     event.stopPropagation();
+    // Local toggle for now
     item.liked = !item.liked;
+    this.items.update(items => [...items]); // Trigger signal update if needed, though mutating obj inside signal array sometimes works depending on change detection.
   }
 }

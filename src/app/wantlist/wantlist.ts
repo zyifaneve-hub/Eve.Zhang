@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, OnInit, inject } from '@angular/core';
+import { RecordService } from '../services/record.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -9,16 +10,16 @@ import { RouterLink } from '@angular/router';
     <div class="px-4 max-w-3xl mx-auto pt-8">
       <div class="mb-8 flex flex-col gap-2 px-2">
         <p class="text-primary font-headline font-bold tracking-widest uppercase text-[10px]">Curated Collection</p>
-        <h2 class="text-2xl md:text-3xl font-headline font-extrabold tracking-tighter text-on-surface">3 件追踪中</h2>
+        <h2 class="text-2xl md:text-3xl font-headline font-extrabold tracking-tighter text-on-surface">{{items().length}} 件追踪中</h2>
         <div class="flex items-center gap-4 text-xs font-label text-on-surface-variant">
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span> 2 可购</span>
+          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span> {{availableCount()}} 可购</span>
           <span class="opacity-20">|</span>
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span> 1 等待中</span>
+          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span> {{waitCount()}} 等待中</span>
         </div>
       </div>
 
       <div class="flex flex-col">
-        @for (item of items; track item.id) {
+        @for (item of items(); track item.id) {
           <a [routerLink]="['/product', item.id]" class="group relative flex gap-4 p-4 hover:bg-white/5 transition-all duration-300 border-b border-white/5 cursor-pointer">
             <div class="relative w-24 h-24 shrink-0 overflow-hidden rounded-lg shadow-lg">
               <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover" referrerpolicy="no-referrer" />
@@ -67,16 +68,37 @@ import { RouterLink } from '@angular/router';
     </div>
   `
 })
-export class WantlistComponent {
-  items = [
-    { id: '1', title: 'Kid A Mnesia', artist: 'Radiohead', format: '3xLP', condition: 'Near Mint (NM)', price: '428.00', status: 'available', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD8fBIddr_fyTWNSbEFAkunD-p94HorYBQfXd7dy9Vu4RscriRWq2c4jNOkgoK653h8hCxFev02IsQUcWDsdb1ha2jt-MyqE2exAvLYVswYDFaCfui9nSg_gD203u34g90EEJWPT0mYeXmyBN11DPf4VrhSyE75vCI4GPZFam2DknGk79XvryYwTKlCqa4_aXi2ZvikU_5cZlQ8cI3HQusH8AQMIK5scsvVAAxqgCTzOVUI4It35_gK663MM92UvvNWLx4U4TOKxqR4', liked: true },
-    { id: '2', title: 'A Love Supreme', artist: 'John Coltrane', format: '180g', condition: 'Mint (M)', price: '580.00', status: 'wait', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA7QHYX5Rou2YKKZphi474hbUlj7VHVz1t57Oqw0I0_aTWnKWMtsFTFO2nCnrRU38YHtnvxwgoU5lqWv3eMpa1LExjNnBC8yDenDfd3BBYutQX7h42mSTu0vDYgs7Z9uRgOBPzkb5JIJvOWjtpAo6Y54Pb7JBAic4gbSAKck7dbTLZj47jBjDtnp1DIIetYPvLkRLQTojjMIIPcR-1Uvyz-4W0g-dMAPso-OwymQkxzLLqmgVCt5qE4ESS6twVInE5CydBiYHSOvwyE', liked: true },
-    { id: '3', title: 'Random Access Memories', artist: 'Daft Punk', format: '2xLP', condition: 'VG+', price: '315.00', status: 'available', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwvSqg8xEb6bipZmGJpzr7vg1VbIbl9x5WVNcPrPqcv4G8WWFemnrarrGBILFNUk-0uCNc1190O1Bws-e-p4R7Difvy_09jRcZQtRv5FOyEw1CsWst4VMTb9BK1Moa_SwNFByfyqQbgrOnPhGYLWev4LQ3exd197DFcX_IlMQKBHDeLhgfkPcbDAYzuy3Ybg6jqbqqzyHTxmfTkq8lw9m9_XqLnjk5_tExXDBBP_1gtO1-XPPfMLdG9TDVJYWz2Z7-yXZnau5UD1t1', liked: true },
-  ];
+export class WantlistComponent implements OnInit {
+  private recordService = inject(RecordService);
+  
+  items = signal<any[]>([]);
+
+  availableCount = computed(() => this.items().filter(i => i.status === 'available').length);
+  waitCount = computed(() => this.items().filter(i => i.status === 'wait').length);
+
+  ngOnInit() {
+    this.recordService.getRecords().subscribe({
+      next: (data) => {
+        // Grab a slice of records to use as the wantlist and mock their availability status
+        this.items.set(data.slice(data.length > 5 ? data.length - 4 : 0).map((item, index) => ({
+          ...item,
+          format: item.format,
+          condition: `${item.media_grade} / ${item.sleeve_grade}`,
+          image: item.image_url,
+          status: index % 3 === 0 ? 'wait' : 'available',
+          liked: true
+        })));
+      },
+      error: (err) => {
+        console.error('Failed to load wantlist records:', err);
+      }
+    });
+  }
 
   toggleLike(event: Event, item: any) {
     event.preventDefault();
     event.stopPropagation();
     item.liked = !item.liked;
+    this.items.update(items => [...items]);
   }
 }

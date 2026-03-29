@@ -212,14 +212,14 @@ export class ProfileComponent {
 
   filteredBuyingOrders = computed(() => {
     const query = this.searchQuery().toLowerCase();
-    return this.buyingOrders().filter(o => 
+    return this.buyingOrders().filter(o =>
       o.title.toLowerCase().includes(query) || o.artist.toLowerCase().includes(query)
     );
   });
 
   filteredSellingOrders = computed(() => {
     const query = this.searchQuery().toLowerCase();
-    return this.sellingOrders().filter(o => 
+    return this.sellingOrders().filter(o =>
       o.title.toLowerCase().includes(query) || o.artist.toLowerCase().includes(query)
     );
   });

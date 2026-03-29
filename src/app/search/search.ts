@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { RecordService } from '../services/record.service';
 
 interface Product {
   id: string;
   title: string;
   artist: string;
   price: number;
-  format: 'Vinyl' | 'CD' | 'Cassette';
-  condition: 'M' | 'NM' | 'VG+' | 'VG' | 'G';
+  format: string;
+  condition: string;
   image: string;
   liked?: boolean;
 }
@@ -85,7 +86,7 @@ interface Product {
             @for (item of recommendedProducts(); track item.id) {
               <a [routerLink]="['/product', item.id]" class="group flex flex-col cursor-pointer">
                 <div class="relative aspect-square overflow-hidden bg-surface-container-low mb-4 rounded-lg">
-                  <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
+                  <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
                   <div class="absolute top-2 right-2 bg-primary text-on-primary text-[10px] px-2 py-1 font-bold tracking-widest">[{{item.format}}]</div>
                   <div class="absolute bottom-2 left-2 bg-surface/80 backdrop-blur-md px-2 py-1 text-[10px] text-primary border border-primary/20">{{item.condition}}</div>
                 </div>
@@ -121,7 +122,7 @@ interface Product {
             @for (item of filteredProducts(); track item.id) {
               <a [routerLink]="['/product', item.id]" class="group flex flex-col cursor-pointer">
                 <div class="relative aspect-square overflow-hidden bg-surface-container-low mb-4 rounded-lg">
-                  <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
+                  <img [src]="item.image" [alt]="item.title" class="w-full h-full object-cover transition-all duration-700 scale-100 group-hover:scale-110" referrerpolicy="no-referrer" />
                   <div class="absolute top-2 right-2 bg-primary text-on-primary text-[10px] px-2 py-1 font-bold tracking-widest">[{{item.format}}]</div>
                   <div class="absolute bottom-2 left-2 bg-surface/80 backdrop-blur-md px-2 py-1 text-[10px] text-primary border border-primary/20">{{item.condition}}</div>
                 </div>
@@ -257,7 +258,9 @@ interface Product {
     }
   `
 })
-export class SearchComponent {
+export class SearchComponent implements OnInit {
+  private recordService = inject(RecordService);
+
   isFocused = signal(false);
   isFilterOpen = signal(false);
 
@@ -275,14 +278,23 @@ export class SearchComponent {
   ];
   conditions = ['M', 'NM', 'VG+', 'VG', 'G'];
 
-  products = signal<Product[]>([
-    { id: '1', title: 'Amnesiac', artist: 'Radiohead', price: 1280, format: 'Vinyl', condition: 'NM', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDTeQ6EDgEO-UvcnLlabt440OhXt-JmMaRBnhCo9dBvhnyFXXarSKt2Pn4LmrfemuRfjjRjl09erREg36YcEjkD0yXMaSbgqvpOjqckeoWqK2d3yzJM7n6e3Cqchaxbw0AZJfs9m2ZUbtdAfPEL7C86Ok7kTMc4EmblF9fDtRWO2SQi8_6VJsxQ9rdhNTrLWUlMuSI4YPr1mUZjsMPF-TtcdkuTIWdfgFnVNHVhX6WlJ44bwlzEMsfVCJjqlPpBTXFN26SdV5JmEe3i' },
-    { id: '2', title: 'Unknown Pleasures', artist: 'Joy Division', price: 450, format: 'Cassette', condition: 'VG+', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAWTFppcWEiW8QzsWF1ya0gdu-7i-uON-MZ6RdJBSluzfXvfqxRxJl25uw-GVcMP4qrTKdRlIstxEDuLLz5DLfxdksMc4uSYnc-k6YRnOgNoNwtOmETeMO7mUmNy0ZMUpzJMDUMwAcO4WGd5rr2Ga-o0D6vdX5QYUDsdcBqE1_AzD8i3N9Ome4E9pltkGzrymiAGF3hfJoYY9LGLDGIUgZ26_l8TA8XCdN67RHPoU0wGwWsf4DKca6Qc9TqgbGM98SCZ919f9Ic2Sx5' },
-    { id: '3', title: 'The Wall', artist: 'Pink Floyd', price: 180, format: 'CD', condition: 'M', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBVlPnZW90i9sqd6y-J-W6IZFjRd9RY3SOl7jysCyHL3ZyiXIlYwht7012lAkD4F8V72AwPbmUO9gn9_MQl91a26mhEysAbOsDHIZqHnxFAEfTJ38mlCLaeVOc4-U7EUQB5Ngzz6CrVz0K0Ew2SUf-3WrNIpXQR0dmeWTRg9cnOwJwpRSbg2CQvlXo0v6Qj5GlIiB-T30j3LRteQZEhpOGzB18EGvcDiTAJhLc5kZNZT9jfkoOUZF-zHbCIxDjRyo1pYOSKSTuskH0g' },
-    { id: '4', title: 'Kind of Blue', artist: 'Miles Davis', price: 2400, format: 'Vinyl', condition: 'NM', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC2duI1hU6GRkF9afI15orOuJs0lBfn4aoZRpnnkkV07Di0AR8GJal9SVkF6PeB4TaShpmcKGd0ZaqnmzLG704ZZZRbtY3s65LBU0Vzz-H7bPZG-F3t_Jl6lv1lVvgmd055nK4LuR-SRTYHp3kLQZdFSxEjnx-NBjXX0nVC7kh38is2upTd02f4p61piUhsDcwaavqhi_ZIMYNtaaic6ZEqO8yurgrExxqC3VpWEZHRTv2yNMCdhHHRj1UrBPtqKsw8x1NT1s0d4VTG' },
-    { id: '5', title: 'Random Access Memories', artist: 'Daft Punk', price: 315, format: 'Vinyl', condition: 'VG+', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwvSqg8xEb6bipZmGJpzr7vg1VbIbl9x5WVNcPrPqcv4G8WWFemnrarrGBILFNUk-0uCNc1190O1Bws-e-p4R7Difvy_09jRcZQtRv5FOyEw1CsWst4VMTb9BK1Moa_SwNFByfyqQbgrOnPhGYLWev4LQ3exd197DFcX_IlMQKBHDeLhgfkPcbDAYzuy3Ybg6jqbqqzyHTxmfTkq8lw9m9_XqLnjk5_tExXDBBP_1gtO1-XPPfMLdG9TDVJYWz2Z7-yXZnau5UD1t1' },
-    { id: '6', title: 'A Love Supreme', artist: 'John Coltrane', price: 580, format: 'Vinyl', condition: 'M', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA7QHYX5Rou2YKKZphi474hbUlj7VHVz1t57Oqw0I0_aTWnKWMtsFTFO2nCnrRU38YHtnvxwgoU5lqWv3eMpa1LExjNnBC8yDenDfd3BBYutQX7h42mSTu0vDYgs7Z9uRgOBPzkb5JIJvOWjtpAo6Y54Pb7JBAic4gbSAKck7dbTLZj47jBjDtnp1DIIetYPvLkRLQTojjMIIPcR-1Uvyz-4W0g-dMAPso-OwymQkxzLLqmgVCt5qE4ESS6twVInE5CydBiYHSOvwyE' },
-  ]);
+  products = signal<Product[]>([]);
+
+  ngOnInit() {
+    this.recordService.getRecords().subscribe({
+      next: (data) => {
+        this.products.set(data.map(item => ({
+          ...item,
+          format: item.format,
+          condition: `${item.media_grade} / ${item.sleeve_grade}`,
+          image: item.image_url
+        })));
+      },
+      error: (err) => {
+        console.error('Failed to load search records:', err);
+      }
+    });
+  }
 
   recommendedProducts = computed(() => {
     return this.products().slice(0, 4);
@@ -298,11 +310,17 @@ export class SearchComponent {
         }
       }
       // Format
-      if (this.selectedFormat() && p.format !== this.selectedFormat()) {
-        return false;
+      if (this.selectedFormat()) {
+        const isVinyl = this.selectedFormat() === 'Vinyl';
+        const itemFormatUpper = p.format ? p.format.toUpperCase() : '';
+        if (isVinyl && !itemFormatUpper.includes('LP')) {
+          return false;
+        } else if (!isVinyl && !itemFormatUpper.includes(this.selectedFormat()!.toUpperCase())) {
+          return false;
+        }
       }
       // Condition
-      if (this.selectedCondition() && p.condition !== this.selectedCondition()) {
+      if (this.selectedCondition() && p.condition && !p.condition.includes(this.selectedCondition()!)) {
         return false;
       }
       // Price

@@ -6,11 +6,19 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
+import { recordRoutes } from './api/routes/records';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({
+  allowedHosts: ['localhost', '127.0.0.1', '0.0.0.0']
+});
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+app.use('/api/records', recordRoutes);
 
 /**
  * Example Express Rest API endpoints can be defined here.

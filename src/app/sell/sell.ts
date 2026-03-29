@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { RecordService } from '../services/record.service';
 
 @Component({
   selector: 'app-sell',
@@ -157,8 +158,8 @@ import { RouterLink, Router } from '@angular/router';
           </button>
           <button type="submit" 
             class="flex-[2] py-4 bg-primary text-on-primary font-headline font-extrabold text-lg rounded-full shadow-[0_10px_30px_rgba(255,85,64,0.3)] hover:brightness-110 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 disabled:active:scale-100"
-            [disabled]="!sellForm.valid">
-            确认上架
+            [disabled]="!sellForm.valid || isSubmitting()">
+            {{ isSubmitting() ? '正在提交...' : '确认上架' }}
           </button>
         </div>
       </form>
@@ -168,6 +169,9 @@ import { RouterLink, Router } from '@angular/router';
 export class SellComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private recordService = inject(RecordService);
+
+  isSubmitting = signal(false);
 
   sellForm = this.fb.group({
     title: ['', Validators.required],
@@ -233,14 +237,24 @@ export class SellComponent {
 
   onSubmit() {
     if (this.sellForm.valid) {
-      console.log('Form Submitted:', this.sellForm.value);
-      alert('唱片上架成功！');
-      this.sellForm.reset({
-        mediaGrade: 'NM',
-        sleeveGrade: 'VG+'
+      this.isSubmitting.set(true);
+      this.recordService.createRecord(this.sellForm.value).subscribe({
+        next: () => {
+          this.isSubmitting.set(false);
+          alert('唱片上架成功！');
+          this.sellForm.reset({
+            mediaGrade: 'NM',
+            sleeveGrade: 'VG+'
+          });
+          this.imagePreview.set(null);
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          this.isSubmitting.set(false);
+          console.error('Submit Error:', err);
+          alert('上架失败，请重试。' + err.message);
+        }
       });
-      this.imagePreview.set(null);
-      this.router.navigate(['/profile']);
     } else {
       this.sellForm.markAllAsTouched();
     }
